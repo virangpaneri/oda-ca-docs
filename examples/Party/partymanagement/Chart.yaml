@@ -1,6 +1,6 @@
 apiVersion: v2
-name: uc001
-description: Usecase 001 - Create new Account as defined on TMF1228 v8
+name: partymanagement
+description: Basic wrapper around TMF632 Party Management API
 
 # A chart can be either an 'application' or a 'library' chart.
 #
