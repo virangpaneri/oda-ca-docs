@@ -509,29 +509,29 @@ We have created all the Kubernetes resources to deploy the mongoDb, party role a
 This is a relatively simple component that just exposes one API as part of its `coreFunction`. Note that we have included the release name and component name in the root of the API path (this is a good pattern to follow so that the API doesn't conflict with any other components deployed in the same environment).
 
 ```
-apiVersion: oda.tmforum.org/v1alpha1
+apiVersion: oda.tmforum.org/v1alpha4
 kind: component
 metadata:
-  name: {{.Release.Name}}-{{.Values.component.type}}
+  name: {{.Release.Name}}-{{.Values.component.name}}
   labels:
-    oda.tmforum.org/componentName: {{.Release.Name}}-{{.Values.component.type}}
+    oda.tmforum.org/componentName: {{.Release.Name}}-{{.Values.component.name}}
 spec:
   type: {{.Values.component.type}}
   selector:
     matchLabels:
-     oda.tmforum.org/componentName: {{.Release.Name}}-{{.Values.component.type}}
+     oda.tmforum.org/componentName: {{.Release.Name}}-{{.Values.component.name}}
   componentKinds:
-    - group: core
-      kind: Service    
-    - group: core
-      kind: PersistentVolumeClaim
-    - group: apps
-      kind: Deployment  
-  version: "0.0.1"
+  - group: core
+    kind: Service    
+  - group: core
+    kind: PersistentVolumeClaim
+  - group: apps
+    kind: Deployment  
+  version: {{.Values.component.version}}
   description: "Simple Product Catalog ODA-Component from Open-API reference implementation." 
   maintainers:
-    - name: Lester Thomas
-      email: lester.thomas@vodafone.com
+  - name: Lester Thomas
+    email: lester.thomas@vodafone.com
   owners:
     - name: Lester Thomas
       email: lester.thomas@vodafone.com     
@@ -539,17 +539,37 @@ spec:
     exposedAPIs: 
     - name: productcatalogmanagement
       specification: https://raw.githubusercontent.com/tmforum-apis/TMF620_ProductCatalog/master/TMF620-ProductCatalog-v4.0.0.swagger.json
-      implementation: {{.Release.Name}}-productcatalogapi
-      path: /{{.Release.Name}}-{{.Values.component.type}}/tmf-api/productCatalogManagement/v4
-      developerUI: /{{.Release.Name}}-{{.Values.component.type}}/tmf-api/productCatalogManagement/v4
+      implementation: {{.Release.Name}}-prodcatapi
+      apitype: openapi
+      path: /{{.Release.Name}}-{{.Values.component.name}}/tmf-api/productCatalogManagement/v4
+      developerUI: /{{.Release.Name}}-{{.Values.component.name}}/tmf-api/productCatalogManagement/v4/docs
       port: 8080
-    dependantAPIs: []
+    dependentAPIs: 
+    - name: party      
+      specification: https://open-api.tmforum.org/TMF632-Party-v4.0.0.swagger.json  
   eventNotification:
     publishedEvents: []
     subscribedEvents: []
-  management: []
+  management: 
+    - name: metrics
+      apitype: prometheus
+      implementation: {{.Release.Name}}-{{.Values.component.name}}-sm
+      path: /{{.Release.Name}}-{{.Values.component.name}}/metrics
+      port: 4000    
   security:
-    securitySchemes: []
+    controllerRole: {{ .Values.security.controllerRole }}
+    securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+    partyrole:
+      specification: https://raw.githubusercontent.com/tmforum-apis/TMF669_PartyRole/master/TMF669-PartyRole-v4.0.0.swagger.json
+      implementation: {{.Release.Name}}-partyroleapi
+      apitype: openapi
+      path: /{{.Release.Name}}-{{.Values.component.name}}/tmf-api/partyRoleManagement/v4
+      developerUI: /{{.Release.Name}}-{{.Values.component.name}}/tmf-api/partyRoleManagement/v4/docs
+      port: 8080
 ```
 
 Finally we have to create the parameters in the `values.yaml` file. Since we have parameterized just 1 value, our values.yaml file will look like:
